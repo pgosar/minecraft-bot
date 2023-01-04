@@ -1,3 +1,6 @@
+/**
+ * @param {RGBot} bot
+ */
 function configureBot(bot) {
 
     bot.setDebug(true);
@@ -22,7 +25,7 @@ function configureBot(bot) {
         let skipCurrentEntity = false;
         let countBefore = 0
         for (const elem of entityName) {
-            countBefore += bot.getInventoryItemQuantity(elem);    
+            countBefore += bot.getInventoryItemQuantity(elem);
         }
 
         // Ensure that if the Bot fails to gather the dropped item,
@@ -33,14 +36,15 @@ function configureBot(bot) {
             const foundEntity = await bot.findBlocks({blockNames: entityName, maxDistance: 80 }).shift();
             if (foundEntity) {
                 // If the Bot located one, then go chop it
-                const success = await bot.findAndDigBlock(foundEntity, { maxDistance: 80 });
+                let success = await bot.approachAndDigBlock(foundEntity.result)
+                // success = success && await bot.digBlock(foundEntity)
                 if (!success) {
                     // If anything prevents the Bot from breaking the block,
                     // then find the next-closest and try gathering that instead.
-                    // skipCurrentEntity = true;
+                    skipCurrentEntity = true;
                     bot.chat('fail')
                 } else {
-                    // skipCurrentEntity = false;
+                    skipCurrentEntity = false;
                     bot.chat('success')
                 }
             } else {
@@ -58,7 +62,7 @@ function configureBot(bot) {
 
             countAfter = 0
             for (const elem of entityName) {
-                countAfter += bot.getInventoryItemQuantity(elem);    
+                countAfter += bot.getInventoryItemQuantity(elem);
             }
             bot.chat('finished cycle')
         }
