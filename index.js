@@ -1,4 +1,8 @@
 /**
+ * This strategy is an advanced example of how to customize movements, place blocks, and craft items with the rg-bot package.
+ * The Bot will collect coal until it has 100 points-worth of items in its inventory.
+ * (Note: Coal_Ore and apples are each worth 1 point.  Why apples you say?  Apples are a possible byproduct from collecting the logs to create new pickaxes.)
+ *
  * @param {RGBot} bot
  */
 function configureBot(bot) {
@@ -16,6 +20,8 @@ function configureBot(bot) {
         await gatherEntity(targets)
     }
 
+
+
     // This function will make the Bot chop + pick up a named entity.
     async function gatherEntity(entityName) {
 
@@ -25,7 +31,7 @@ function configureBot(bot) {
         let skipCurrentEntity = false;
         let countBefore = 0
         for (const elem of entityName) {
-            countBefore += bot.getInventoryItemQuantity(elem);
+            countBefore += bot.getInventoryItemQuantity(elem);    
         }
 
         // Ensure that if the Bot fails to gather the dropped item,
@@ -33,18 +39,21 @@ function configureBot(bot) {
         bot.chat('start search')
         let countAfter = countBefore;
         while (countAfter <= countBefore) {
-            const foundEntity = await bot.findBlocks({blockNames: entityName, maxDistance: 80 }).shift();
+            //120 reaches both villages through connecting poppies
+            const foundEntity = await bot.findBlocks({blockNames: entityName, maxDistance: 30 }).shift();
             if (foundEntity) {
                 // If the Bot located one, then go chop it
                 let success = await bot.approachAndDigBlock(foundEntity.result)
                 // success = success && await bot.digBlock(foundEntity)
+                
+                
                 if (!success) {
                     // If anything prevents the Bot from breaking the block,
                     // then find the next-closest and try gathering that instead.
-                    skipCurrentEntity = true;
+                    // skipCurrentEntity = true;
                     bot.chat('fail')
                 } else {
-                    skipCurrentEntity = false;
+                    // skipCurrentEntity = false;
                     bot.chat('success')
                 }
             } else {
@@ -57,12 +66,13 @@ function configureBot(bot) {
                 //     didWander = await bot.wander();
                 // }
                 bot.chat('Cannot find block');
-                return;
+                let dest = GoalBlock(70, 67, -110);
+                await bot.pathfinder.goto(dest);
             }
-
+ 
             countAfter = 0
             for (const elem of entityName) {
-                countAfter += bot.getInventoryItemQuantity(elem);
+                countAfter += bot.getInventoryItemQuantity(elem);    
             }
             bot.chat('finished cycle')
         }
